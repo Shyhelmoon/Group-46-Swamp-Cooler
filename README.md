@@ -2,3 +2,5 @@
 
 Team Members:
 Kieran Cole
+Simeon Dimitrov
+Grace Cryer
