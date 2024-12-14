@@ -200,3 +200,68 @@ void checkState()
       break;
     }
 }
+//print angle of vent 
+void printVentPosition(int newpos) {
+  U0printString("Vent is now at ");
+  U0printNumber(newpos);
+  U0printString(" deg.\n");
+}
+//print (hh:mm:ss)
+void printCurrentTime() {
+  DateTime now = clock.now();
+
+  U0printNumber(now.hour());
+  U0putchar(':');
+  U0printNumber(now.minute());
+  U0putchar(':');
+  U0printNumber(now.second());
+  U0putchar('\n');
+}
+
+void displayTempAndHumidity() {
+  currentMillis = millis();
+  int elapsedTime = (currentMillis - previousMillis) / 1000;
+
+  //check if over one minute has passed since ine reading
+  if (currentMillis - previousMillis >= updateDisplayInterval) {
+    lcd.setCursor(0,0);
+    lcd.print("Temp: ");
+    lcd.print(dht.readTemperature());
+    lcd.print((char)223);
+    lcd.print("C ");
+
+    lcd.setCursor(0,1);
+    lcd.print("Humidity: ");
+    lcd.print(dht.readHumidity());
+    lcd.print("%");
+    //update millis
+    previousMillis = currentMillis; 
+    }
+
+  lcd.setCursor(14, 0);
+  lcd.print(elapsedTime);
+  lcd.print("   ");
+}
+
+//if fan state changes, update lcd
+void printStateChange() {
+  if (currentState != previousState) {
+    U0printString("State is now ");
+        switch (currentState) {
+            case IDLE: 
+                U0printString("IDLE"); 
+                U0printString(" (fan is off) ");
+                break;
+            case RUNNING: 
+                U0printString("RUNNING"); 
+                U0printString(" (fan is on) ");
+            case DISABLED: U0printString("DISABLED"); break;
+            case ERROR: U0printString("ERROR"); break;
+            default: break;
+        }
+    previousMillis = millis() - updateDisplayInterval;
+    U0printString(" as of: ");
+    printCurrentTime();
+    }
+    
+}
