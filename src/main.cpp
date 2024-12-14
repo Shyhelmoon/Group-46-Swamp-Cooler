@@ -114,3 +114,89 @@ void sensorsMotorsInit() {
 void toggleOn() {
     on = !on;
 }
+
+void controlVent()
+{
+  int potValue = adc_read(VENT_POT_PIN);
+
+  //map the range of potentiometer to range of steps
+  int targetPosition = map(potVAlue, 0 , 1023, 0, stepsPerRevolution);
+
+  //converting steps to degrees
+  int targetDegrees = map(targetPosition, 0, stepsPerRevolution, 0, 360);
+  int currentDegrees = map(currentStepperPos, 0, stepsPerRevolution, 0, 360);
+
+  //check whether movement past threshold before moving vent
+  if (abs(targetDegrees - currentDegrees) > 2)
+  {
+    int toMove = targetPosition - currentStepperPos;
+    vent.step(toMove);
+    currentStepperPos = targetPosition;
+
+    //print vent position
+    printVentPosition(targetDegrees);
+  }
+
+  currentStepperPos = targetPosition;
+
+}
+
+void updateLED()
+{
+  //set to low, then set state indicator to high
+  PORTB &= ~((1 << LED_IDLE) |  (1 << LED_RUNNING) | ( 1 << LED_DISABLED) | (1 << LED_ERROR));
+
+  switch(currentState) 
+  {
+    case IDLE: PORTB |= (1 << LED_IDLE); 
+    break;
+
+    case RUNNING: PORTB |= (1 << LED_RUNNING);
+    break;
+
+    case DISABLED: PORTB |= ( 1 << LED_DISABLED);
+    break;
+
+    case ERROR: PORTB |= (1 << LED_ERROR);
+    break;
+  }
+}
+
+
+void checkState() 
+{
+    //readTemperature and readTemperature(true) are goofy
+    currentTemp = dht.readTemperature();
+    currentWaterLevel = adc_read(1);
+
+    //handling whether anything is on
+    switch (currentState) {
+      case IDLE: 
+            if (!on) currentState = DISABLED;
+            else if (currentWaterLevel <= WATER_THRESHOLD) currentState = ERROR;
+            else if (TEMP_THRESHOLD < currentTemp) currentState = RUNNING;
+            break;
+      
+      case RUNNING:
+            if (!on) currentState = DISABLED;
+            else if (currentWaterLevel <= WATER_THRESHOLD) currentState = ERROR;
+            else if (TEMP_THRESHOLD < currentTemp) 
+            {
+              currentState = IDLE;
+              //turns off fan
+              PORTC &= ~(1 << FAN_PIN);
+            }
+            break;
+
+      case DISABLED:
+            if (on) currentState = IDLE;
+
+      case ERROR:
+            if (!on) currentState = DISABLED;
+            else if (currentWaterLevel > WATER_THRESHOLD) currentState = IDLE;
+            break;
+
+      default:
+      break;
+    }
+}
