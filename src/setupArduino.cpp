@@ -1,4 +1,4 @@
-#include "myArduino.h"
+#include "setupArduino.h"
 
 void adcInit() {
     // setup the A register
