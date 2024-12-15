@@ -88,7 +88,49 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  //check and display state
+  if(!on) currentState = DISABLED;
+  else checkState(); 
+  printStateChange();
+  previousState = currentState;
+
+  //behavior of each state
+  switch (currentState) { 
+      case IDLE: 
+        displayTempAndHumidity();
+        controlVent();
+        break;
+     
+      //enable fan, fan turned off upon exiting RUNNING state
+      case RUNNING: 
+        displayTempAndHumidity();
+        controlVent();
+        PORTC |= (1 << FAN_PIN);
+        break;
+
+      //no temp and humidity, fan off
+      case DISABLED: 
+        lcd.clear();
+        PORTC &= ~(1 << FAN_PIN);
+        controlVent();
+        break;
+
+      //turn off fan and print error message
+      case ERROR: 
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Water level is");
+        lcd.setCursor(0,1);
+        lcd.print("too low!");
+        PORTC &= ~(1 << FAN_PIN); 
+        break;
+
+        default:
+        break;
+    }
+
+    updateLED();
+
 }
 
 // Function Definitions
