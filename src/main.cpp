@@ -73,7 +73,18 @@ void printStateChange();
 void displayTempAndHumidity();
 
 void setup() {
-  // put your setup code here, to run once:
+  lcd.begin(16, 2);
+
+  U0Init(9600);
+  adcInit();
+  gpioInit();
+  
+  sensorsMotorsInit();
+
+  currentState = DISABLED;
+  on = false;
+  lcd.clear();
+  
 }
 
 void loop() {
